@@ -1,0 +1,58 @@
+[
+  {
+    "name": "auth-service",
+    "version": "1.0.0",
+    "api-route": "/api/auth",
+    "ui-route": "/auth",
+    "redirect-portal": "http://localhost:3001"
+  },
+  {
+    "name": "sms-service",
+    "version": "1.0.0",
+    "api-route": "/api/sms",
+    "ui-route": "/sms",
+    "redirect-portal": "http://localhost:3002"
+  },
+  {
+    "name": "stakeholder-service",
+    "version": "1.0.0",
+    "api-route": "/api/stakeholder",
+    "ui-route": "/stakeholder",
+    "redirect-portal": "http://localhost:3003"
+  },
+  {
+    "name": "subscriber-service",
+    "version": "1.0.0",
+    "api-route": "/api/subscriber",
+    "ui-route": "/subscriber",
+    "redirect-portal": "http://localhost:3004"
+  },
+  {
+    "name": "report-service",
+    "version": "1.0.0",
+    "api-route": "/api/report",
+    "ui-route": "/report",
+    "redirect-portal": "http://localhost:3005"
+  },
+  {
+    "name": "package-service",
+    "version": "1.0.0",
+    "api-route": "/api/package",
+    "ui-route": "/package",
+    "redirect-portal": "http://localhost:3006"
+  },
+  {
+    "name": "billing-service",
+    "version": "1.0.0",
+    "api-route": "/api/billing",
+    "ui-route": "/billing",
+    "redirect-portal": "http://localhost:3007"
+  },
+  {
+    "name": "support-service",
+    "version": "1.0.0",
+    "api-route": "/api/support",
+    "ui-route": "/support",
+    "redirect-portal": "http://localhost:3008"
+  }
+]
