@@ -6,12 +6,19 @@ require('dotenv').config();
 
 const services = require('../services.json');
 const { callService } = require('./utils');
+const { createLogger, requestLoggerConsole } = require('./logger');
+const requestLogger = require('./middleware/loggerMiddleware');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+if (process.env.NODE_ENV === 'development') app.use(requestLoggerConsole);
+
+app.use(requestLogger);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -33,10 +40,9 @@ app.use('/api', async (req, res) => {
   }
   
   const response = await callService(req.method, redirectPortal + req.path, req.headers, req.body);
-  res.status(response.status).json(response.data)
 
-  console.log(`Proxying request for service: ${service.name} to ${service['redirect-portal']}`);
-  res.send(`Hello from ${service.name} at ${service['redirect-portal']}! You requested: ${req.originalUrl}`);
+  // console.log(`Proxying request for service: ${service.name} to ${service['redirect-portal']}`);
+  res.status(response.status).json(response.data);
 });
 
 
@@ -56,6 +62,8 @@ app.use((req, res) => {
   res.status(404).send('404 Not Found');
 });
 
+// Error handler
+app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
