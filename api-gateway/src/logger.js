@@ -33,15 +33,38 @@ class DbTransport extends Transport {
   }
 }
 
-const createLogger = () =>
-  winston.createLogger({
-    level: 'info',
-    format: winston.format.json(),
-    transports: [
-      new winston.transports.Console(),
-      // We replace the broken Stream transport with our new DbTransport.
-      new DbTransport(),
-    ],
-  });
+const mainLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    // new winston.transports.Console(),
+    // We replace the broken Stream transport with our new DbTransport.
+    new DbTransport(),
+  ],
+});
 
-module.exports = createLogger();
+// --- Merged from requestLoggerConsole.js ---
+
+const consoleLogger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.timestamp(),
+    winston.format.printf(({ timestamp, level, message }) => {
+      return `${timestamp} ${level}: ${message}`;
+    }),
+  ),
+  transports: [new winston.transports.Console()],
+});
+
+// Create a middleware for logging requests for development
+const requestLoggerConsole = (req, res, next) => {
+  consoleLogger.info(`${req.method} ${req.originalUrl}`);
+  next(); // Pass control to the next handler
+};
+
+
+module.exports = {
+  logger: mainLogger,
+  requestLoggerConsole,
+};

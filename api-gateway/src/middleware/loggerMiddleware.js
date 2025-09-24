@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const logger = require('../logger');
+const { logger } = require('../logger');
 
 const requestLogger = (req, res, next) => {
   const requestId = uuidv4();

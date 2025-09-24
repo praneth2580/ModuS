@@ -7,7 +7,7 @@ require('dotenv').config();
 const services = require('../services.json');
 const { callService } = require('./utils');
 const { initLogsTable } = require('./db'); // Import the initializer
-const { requestLoggerConsole } = require('./middleware/requestLoggerConsole');
+const { requestLoggerConsole } = require('./logger');
 const requestLogger = require('./middleware/loggerMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -17,7 +17,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// if (process.env.NODE_ENV === 'development') app.use(requestLoggerConsole);
+if (process.env.NODE_ENV === 'development') app.use(requestLoggerConsole);
 
 app.use(requestLogger);
 
@@ -31,14 +31,10 @@ app.use('/api', async (req, res) => {
   const pathIdentifier = req.path.split('/')[1];
   const service = services.find(s => s['api-route'] === "/api/" + pathIdentifier);
 
-  if (!service) {
-    return res.status(404).send('Service not found');
-  }
+  if (!service) return res.status(404).send('Service not found');
 
   const { "redirect-portal": redirectPortal } = service;
-  if (!redirectPortal) { 
-    return res.status(301).send("Service has been moved permanently")
-  }
+  if (!redirectPortal) return res.status(301).send("Service has been moved permanently");
   
   const response = await callService(req.method, redirectPortal + req.path, req.headers, req.body);
 
@@ -46,17 +42,22 @@ app.use('/api', async (req, res) => {
   res.status(response.status).json(response.data);
 });
 
+// UI REDIRECTION MIDDLEWARE
+app.get('/:service/*', async (req, res) => {
+  const pathIdentifier = req.path.split('/')[1];
+  const service = services.find(s => s['ui-route'] === pathIdentifier);
+  if (!service) return res.status(404).render('404');
 
-// // Dynamically create routes for each service
-// services.forEach((service) => {
-//   const { method, path, target } = route;
-//   app[method](path, (req, res) => {
-//     // Here you would typically proxy the request to the target service
-//     // For this example, we'll just return a placeholder response
-//     console.log(`Proxying ${method.toUpperCase()} ${path} to ${target}`);
-//     res.send(`Hello from ${service.name} at ${target}!`);
-//   });
-// });
+  const { "redirect-portal": redirectPortal } = service;
+  if (!redirectPortal) return res.status(301).send("Service has been moved permanently");
+
+  // render the service UI inside the unified layout
+  res.render('layout', {
+    body: await fetch(redirectPortal + req.path).then(r => r.text()),
+    services, // for sidebar menu
+    user: req.user
+  });
+});
 
 // Handle 404 requests
 app.use((req, res) => {
