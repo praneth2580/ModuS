@@ -1,25 +1,8 @@
-// logger.js
 const winston = require('winston');
-const db = require('./db');
+const { db } = require('./db');
+const Transport = require('winston-transport');
 
-const consoleLogger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.colorize(),
-    winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) => {
-      return `${timestamp} ${level}: ${message}`;
-    }),
-  ),
-  transports: [new winston.transports.Console()],
-});
-
-// Create a middleware for logging requests
-const requestLoggerConsole = (req, res, next) => {
-  consoleLogger.info(`${req.method} ${req.originalUrl}`);
-  next(); // Pass control to the next handler
-};
-
+// The function to write logs to the database remains the same.
 const logToDB = async ({ requestId, level, message, metadata }) => {
   try {
     await db.none(
@@ -31,24 +14,34 @@ const logToDB = async ({ requestId, level, message, metadata }) => {
   }
 };
 
+// Here we define a proper custom transport.
+class DbTransport extends Transport {
+  constructor(opts) {
+    super(opts);
+  }
+
+  log(info, callback) {
+    setImmediate(() => {
+      this.emit('logged', info);
+    });
+
+    // The 'info' object is the log object itself.
+    // We can pass it directly to our database logging function.
+    logToDB(info);
+
+    callback();
+  }
+}
+
 const createLogger = () =>
   winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     transports: [
       new winston.transports.Console(),
-      new winston.transports.Stream({
-        stream: {
-          write: (log) => {
-            const parsed = JSON.parse(log);
-            logToDB(parsed);
-          },
-        },
-      }),
+      // We replace the broken Stream transport with our new DbTransport.
+      new DbTransport(),
     ],
   });
 
-module.exports = {
-  createLogger,
-  requestLoggerConsole
-};
+module.exports = createLogger();

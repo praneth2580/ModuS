@@ -16,7 +16,7 @@ RUN npm ci --only=production
 # Copy the rest of the application files
 COPY --chown=appuser:appgroup services.json services.json
 COPY --chown=appuser:appgroup ./global ./global
-COPY --chown=appuser:appgroup .env.example .env
+# COPY --chown=appuser:appgroup .env.example .env
 COPY --chown=appuser:appgroup ./src ./src
 
 # Switch to the non-root user

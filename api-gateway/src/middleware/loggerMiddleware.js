@@ -7,20 +7,17 @@ const requestLogger = (req, res, next) => {
 
   const startTime = Date.now();
 
-  // Log incoming request
-  logger.info(
-    JSON.stringify({
-      requestId,
-      level: 'info',
-      message: 'Incoming request',
-      metadata: {
-        method: req.method,
-        url: req.originalUrl,
-        headers: req.headers,
-        body: req.body,
-      },
-    }),
-  );
+  // Log incoming request by passing the object directly
+  logger.info({
+    requestId,
+    message: 'Incoming request',
+    metadata: {
+      method: req.method,
+      url: req.originalUrl,
+      headers: req.headers,
+      body: req.body,
+    },
+  });
 
   // Capture response
   const originalSend = res.send;
@@ -29,18 +26,16 @@ const requestLogger = (req, res, next) => {
     res.send(body);
 
     const duration = Date.now() - startTime;
-    logger.info(
-      JSON.stringify({
-        requestId,
-        level: 'info',
-        message: 'Response sent',
-        metadata: {
-          statusCode: res.statusCode,
-          body,
-          duration,
-        },
-      }),
-    );
+    // Log outgoing response by passing the object directly
+    logger.info({
+      requestId,
+      message: 'Response sent',
+      metadata: {
+        statusCode: res.statusCode,
+        body,
+        duration,
+      },
+    });
   };
 
   next();

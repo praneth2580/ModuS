@@ -6,7 +6,8 @@ require('dotenv').config();
 
 const services = require('../services.json');
 const { callService } = require('./utils');
-const { createLogger, requestLoggerConsole } = require('./logger');
+const { initLogsTable } = require('./db'); // Import the initializer
+const { requestLoggerConsole } = require('./middleware/requestLoggerConsole');
 const requestLogger = require('./middleware/loggerMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -16,7 +17,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-if (process.env.NODE_ENV === 'development') app.use(requestLoggerConsole);
+// if (process.env.NODE_ENV === 'development') app.use(requestLoggerConsole);
 
 app.use(requestLogger);
 
@@ -66,8 +67,19 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`API-GATEWAY SERVICE listening at http://localhost:${port}`);
-});
 
-setupGracefulTermination(server);
+// Start the server only after ensuring the database is ready
+const startServer = async () => {
+  try {
+    await initLogsTable();
+    const server = app.listen(port, () => {
+      console.log(`API-GATEWAY SERVICE listening at http://localhost:${port}`);
+    });
+    setupGracefulTermination(server);
+  } catch (error) {
+    console.error("Failed to initialize database and start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
