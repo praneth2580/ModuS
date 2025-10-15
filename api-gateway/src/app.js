@@ -43,7 +43,10 @@ app.use('/api', async (req, res) => {
 });
 
 // UI REDIRECTION MIDDLEWARE
-app.get('/:service/*', async (req, res) => {
+app.use(async (req, res, next) => {
+
+  if (req.method !== 'GET') return next()
+
   const pathIdentifier = req.path.split('/')[1];
   const service = services.find(s => s['ui-route'] === pathIdentifier);
   if (!service) return res.status(404).render('404');
